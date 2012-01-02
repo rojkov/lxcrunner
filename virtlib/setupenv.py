@@ -6,6 +6,7 @@ import logging, logging.config
 
 from ConfigParser import SafeConfigParser as ConfigParser
 from optparse import OptionParser
+from jinja2 import Environment as JinjaEnv, FileSystemLoader as JinjaLoader
 
 LOG = logging.getLogger(__name__)
 
@@ -62,6 +63,13 @@ def main():
     vm_tpl.extractall(path=vm_dir)
     vm_tpl.close()
 
+    rootfs_path = os.path.join(vm_dir, "rootfs")
+    jenv = JinjaEnv(loader=JinjaLoader("templates"))
+    vm_config_tpl = jenv.get_template("vm_config.tpl")
+
+    vm_config = open(os.path.join(vm_dir, "config"), 'w')
+    vm_config.write(vm_config_tpl.render(rootfs=rootfs_path))
+    vm_config.close()
 
 if __name__ == '__main__':
     main()
