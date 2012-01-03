@@ -1,5 +1,6 @@
 import sys
 import tarfile
+import subprocess
 
 import os.path
 import logging, logging.config
@@ -25,11 +26,21 @@ def parse_cmdline():
 
     return options
 
-class VMEnvError(Exception):
+class VMError(Exception):
     pass
 
 class VMGuest(object):
     """Represents VM guest."""
+
+    ST_INCOMPLETE = "incomplete"
+    ST_STOPPED = "stopped"
+    ST_RUNNING = "running"
+
+    _TRANSITIONS = {
+        ST_INCOMPLETE: (ST_STOPPED),
+        ST_STOPPED: (ST_INCOMPLETE, ST_RUNNING),
+        ST_RUNNING: (ST_STOPPED)
+    }
 
     def __init__(self, name, config, context = None):
         """Constructor."""
@@ -52,6 +63,7 @@ class VMGuest(object):
                              if n.startswith("ctx_")]))
         context["name"] = name
         self.context = context
+        self.state = self.ST_INCOMPLETE
 
         self._check_preconditions()
 
@@ -63,6 +75,8 @@ class VMGuest(object):
             file_h = open(path, 'w')
             file_h.write(tpl.render(context))
             file_h.close()
+
+        self._check_transition(self.ST_STOPPED)
 
         vm_path = os.path.join(self.vm_dir, self.name)
         LOG.debug("Create VM folder '%s'" % vm_path)
@@ -86,18 +100,48 @@ class VMGuest(object):
             LOG.debug("Render %s" % tpl_path)
             tpl = jenv.get_template("%s.tpl" % tpl_name)
             renderfile(tpl, os.path.join(rootfs_path, tpl_path), self.context)
+        self.state = self.ST_STOPPED
+
+    def start(self):
+        """Start VM guest."""
+
+        LOG.debug("Starting '%s'" % self.name)
+        self._check_transition(self.ST_RUNNING)
+        subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name])
+        self.state = self.ST_RUNNING
+
+    def stop(self):
+        """Stop VM guest."""
+
+        LOG.debug("Stopping '%s'" % self.name)
+        self._check_transition(self.ST_STOPPED)
+        subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name])
+        self.state = self.ST_RUNNING
+
+    def destroy(self):
+        """Destroy VM guest."""
+
+        LOG.debug("Destroying '%s'" % self.name)
+        self._check_transition(self.ST_INCOMPLETE)
+        subprocess.check_call(["/usr/bin/lxc-destroy", "-n", self.name])
+        self.state = self.ST_INCOMPLETE
 
     def _check_preconditions(self):
         """Verify the environment is ready."""
         if not os.path.isdir(self.vm_dir):
             msg = "VM directory '%s' doesn't exists" % self.vm_dir
             LOG.error(msg)
-            raise VMEnvError(msg)
+            raise VMError(msg)
         if not os.path.exists(self.tarball):
             msg = "VM template '%s' not found" % self.tarball
             LOG.error(msg)
-            raise VMEnvError(msg)
+            raise VMError(msg)
 
+    def _check_transition(self, new_state):
+        """Check if transition to new state is allowed."""
+        if new_state not in self._TRANSITIONS[self.state]:
+            raise VMError("Transition '%s -> %s' is impossible" % \
+                          (self.state, new_state))
 
 def main():
     """Entry point."""
