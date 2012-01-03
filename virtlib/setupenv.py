@@ -108,6 +108,8 @@ class VMGuest(object):
         LOG.debug("Starting '%s'" % self.name)
         self._check_transition(self.ST_RUNNING)
         subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name])
+        subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
+                               "'RUNNING|STOPPED'"])
         self.state = self.ST_RUNNING
 
     def stop(self):
@@ -116,6 +118,8 @@ class VMGuest(object):
         LOG.debug("Stopping '%s'" % self.name)
         self._check_transition(self.ST_STOPPED)
         subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name])
+        subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
+                               "STOPPED"])
         self.state = self.ST_RUNNING
 
     def destroy(self):
