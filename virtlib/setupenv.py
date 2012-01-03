@@ -20,8 +20,6 @@ def parse_cmdline():
     parser.add_option("-p", "--path", dest="vm_path",
                       default="/var/lib/lxc",
                       help="path to directory with virtual machines")
-    parser.add_option("-t", "--template", dest="template",
-                      help="path to tarball with a VM template")
 
     (options, args) = parser.parse_args()
 
