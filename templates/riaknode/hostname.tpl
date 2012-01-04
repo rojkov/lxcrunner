@@ -1,1 +1,1 @@
-{{hostname}}
+{{name}}
