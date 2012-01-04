@@ -108,8 +108,10 @@ class VMGuest(object):
         LOG.debug("Starting '%s'" % self.name)
         self._check_transition(self.ST_RUNNING)
         try:
-            subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name, "-d"],
-                                  stderr=subprocess.STDOUT)
+            subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name, "-d",
+                                   "-o", "/var/log/lxc.%s.log" % self.name,
+                                   "-l", "DEBUG"],
+                                  close_fds=True)
             subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
                                    "RUNNING|STOPPED"])
         except subprocess.CalledProcessError, err:
@@ -177,7 +179,7 @@ def main():
               for name in config.get("derek_setup", "vmguests").split(","))
     for guest in guests:
         guest.create()
-        #guest.start()
+        guest.start()
 
 if __name__ == '__main__':
     main()
