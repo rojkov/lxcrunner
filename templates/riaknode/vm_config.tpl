@@ -1,7 +1,7 @@
 lxc.network.type = veth
 lxc.network.flags = up
 lxc.network.link = br0
-lxc.tty = 4
+lxc.tty = 0
 lxc.pts = 1024
 lxc.rootfs = {{rootfs}}
 lxc.cgroup.devices.deny = a
