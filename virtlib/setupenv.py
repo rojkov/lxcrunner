@@ -107,9 +107,13 @@ class VMGuest(object):
 
         LOG.debug("Starting '%s'" % self.name)
         self._check_transition(self.ST_RUNNING)
-        subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name])
-        subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
-                               "'RUNNING|STOPPED'"])
+        try:
+            subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name, "-d"],
+                                  stderr=subprocess.STDOUT)
+            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
+                                   "RUNNING|STOPPED"])
+        except subprocess.CalledProcessError, err:
+            raise VMError("Can't start %s" % self.name)
         self.state = self.ST_RUNNING
 
     def stop(self):
@@ -117,9 +121,12 @@ class VMGuest(object):
 
         LOG.debug("Stopping '%s'" % self.name)
         self._check_transition(self.ST_STOPPED)
-        subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name])
-        subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
-                               "STOPPED"])
+        try:
+            subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name])
+            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
+                                   "STOPPED"])
+        except subprocess.CalledProcessError, err:
+            raise VMError("Can't stop %s" % self.name)
         self.state = self.ST_RUNNING
 
     def destroy(self):
@@ -170,6 +177,7 @@ def main():
               for name in config.get("derek_setup", "vmguests").split(","))
     for guest in guests:
         guest.create()
+        #guest.start()
 
 if __name__ == '__main__':
     main()
