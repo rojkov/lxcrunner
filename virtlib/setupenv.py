@@ -1,5 +1,6 @@
 import sys
 import tarfile
+import time
 import subprocess
 
 import os.path
@@ -47,6 +48,8 @@ class VMGuest(object):
 
         if context is None:
             context = {}
+        else:
+            context = context.copy()
 
         self.name = name
         vmguest_section = "vmguest_%s" % name
@@ -100,6 +103,7 @@ class VMGuest(object):
             LOG.debug("Render %s" % tpl_path)
             tpl = jenv.get_template("%s.tpl" % tpl_name)
             renderfile(tpl, os.path.join(rootfs_path, tpl_path), self.context)
+        LOG.debug("Used context %r" % self.context)
         self.state = self.ST_STOPPED
 
     def start(self):
@@ -112,8 +116,10 @@ class VMGuest(object):
                                    "-o", "/var/log/lxc.%s.log" % self.name,
                                    "-l", "DEBUG"],
                                   close_fds=True)
-            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
-                                   "RUNNING|STOPPED"])
+            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name,
+                                   "-o", "/var/log/lxc.%s.log" % self.name,
+                                   "-l", "DEBUG", "-s", "RUNNING"],
+                                  close_fds=True)
         except subprocess.CalledProcessError, err:
             raise VMError("Can't start %s" % self.name)
         self.state = self.ST_RUNNING
@@ -124,9 +130,14 @@ class VMGuest(object):
         LOG.debug("Stopping '%s'" % self.name)
         self._check_transition(self.ST_STOPPED)
         try:
-            subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name])
-            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name, "-s",
-                                   "STOPPED"])
+            subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name,
+                                   "-o", "/var/log/lxc.%s.log" % self.name,
+                                   "-l", "DEBUG"],
+                                  close_fds=True)
+            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name,
+                                   "-o", "/var/log/lxc.%s.log" % self.name,
+                                   "-l", "DEBUG", "-s", "STOPPED"],
+                                  close_fds=True)
         except subprocess.CalledProcessError, err:
             raise VMError("Can't stop %s" % self.name)
         self.state = self.ST_RUNNING
@@ -175,11 +186,17 @@ def main():
     LOG.debug("Deploy derek setup")
     context = dict([(n[4:], v) for (n, v) in config.items("derek_setup")
                                if n.startswith("ctx_")])
-    guests = (VMGuest(name.strip(), config, context)
-              for name in config.get("derek_setup", "vmguests").split(","))
+    guests = [VMGuest(name.strip(), config, context)
+              for name in config.get("derek_setup", "vmguests").split(",")]
     for guest in guests:
         guest.create()
-        guest.start()
+        #guest.start()
+
+    LOG.debug("Testing...")
+    time.sleep(5)
+    LOG.debug("Stopping.")
+    #for guest in guests:
+    #    guest.stop()
 
 if __name__ == '__main__':
     main()
