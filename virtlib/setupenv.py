@@ -93,6 +93,8 @@ class VMGuest(object):
         rootfs_path = os.path.join(vm_path, "rootfs")
         jenv = JinjaEnv(loader=JinjaLoader(os.path.join("templates",
                                                         self.type)))
+        jenv.globals["split"] = lambda x: x.split(",")
+
         # VM config
         LOG.debug("Render VM config")
         tpl = jenv.get_template("vm_config.tpl")
