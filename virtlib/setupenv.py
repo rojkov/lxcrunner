@@ -1,4 +1,3 @@
-import sys
 import tarfile
 import time
 import subprocess
