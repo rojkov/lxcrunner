@@ -6,7 +6,7 @@ import subprocess
 import os.path
 import logging, logging.config
 
-from ConfigParser import SafeConfigParser as ConfigParser
+from ConfigParser import NoOptionError, SafeConfigParser as ConfigParser
 from optparse import OptionParser
 from jinja2 import Environment as JinjaEnv, FileSystemLoader as JinjaLoader
 
@@ -61,6 +61,23 @@ class VMGuest(object):
         self.tpls = [(tpl_name, config.get(tpl_section, tpl_name))
                      for tpl_name in tpls]
         self.tarball = config.get(tpl_section, "tarball")
+
+        # target command
+        def get_opt(optname):
+            trg_defaults = {
+                "target_user": "nobody",
+                "target_cmd": None
+            }
+            try:
+                return config.get(vmguest_section, optname)
+            except NoOptionError:
+                return trg_defaults[optname]
+        self.target = {
+            "cmd": get_opt("target_cmd"),
+            "user": get_opt("target_user")
+        }
+
+        # context
         context.update(
             dict([(n[4:], v) for (n, v) in config.items(vmguest_section)
                              if n.startswith("ctx_")]))
@@ -142,7 +159,7 @@ class VMGuest(object):
                                   close_fds=True)
         except subprocess.CalledProcessError, err:
             raise VMError("Can't stop %s" % self.name)
-        self.state = self.ST_RUNNING
+        self.state = self.ST_STOPPED
 
     def destroy(self):
         """Destroy VM guest."""
@@ -151,6 +168,17 @@ class VMGuest(object):
         self._check_transition(self.ST_INCOMPLETE)
         subprocess.check_call(["/usr/bin/lxc-destroy", "-n", self.name])
         self.state = self.ST_INCOMPLETE
+
+    def run_target(self):
+        """Run target command."""
+
+        if not self.target["cmd"]:
+            LOG.debug("No target command defined for %s" % self.name)
+            return
+        trgcmd = ["su", "-", self.target["user"], "-c"]
+        trgcmd.append(self.target["cmd"])
+        LOG.debug("Target command: %r" % trgcmd)
+        subprocess.call(trgcmd)
 
     def _check_preconditions(self):
         """Verify the environment is ready."""
@@ -192,13 +220,16 @@ def main():
               for name in config.get("derek_setup", "vmguests").split(",")]
     for guest in guests:
         guest.create()
-        #guest.start()
+        guest.start()
 
     LOG.debug("Testing...")
     time.sleep(5)
+    for guest in guests:
+        guest.run_target()
     LOG.debug("Stopping.")
-    #for guest in guests:
-    #    guest.stop()
+    for guest in guests:
+        guest.stop()
+        guest.destroy()
 
 if __name__ == '__main__':
     main()
