@@ -196,6 +196,40 @@ class VMGuest(object):
             raise VMError("Transition '%s -> %s' is impossible" % \
                           (self.state, new_state))
 
+class VMSetup(object):
+    """Setup of VM guest collection."""
+
+    def __init__(self, name, config):
+        """Constructor."""
+
+        self.name = name
+        context = dict([(n[4:], v) for (n, v) in config.items(name)
+                                   if n.startswith("ctx_")])
+        self.guests = [VMGuest(n.strip(), config, context)
+                       for n in config.get(name, "vmguests").split(",")]
+
+    def prepare(self):
+        """Prepare virtual environment."""
+
+        LOG.debug("Prepare environment for '%s'" % self.name)
+        for guest in self.guests:
+            guest.create()
+            guest.start()
+
+    def run(self):
+        """Run target commands inside guests."""
+
+        LOG.debug("Run targets")
+        for guest in self.guests:
+            guest.run_target()
+
+    def cleanup(self):
+        """Clean up."""
+        LOG.debug("Do cleanup.")
+        for guest in self.guests:
+            guest.stop()
+            guest.destroy()
+
 def main():
     """Entry point."""
 
@@ -213,22 +247,12 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     LOG.debug("Deploy derek setup")
-    context = dict([(n[4:], v) for (n, v) in config.items("derek_setup")
-                               if n.startswith("ctx_")])
-    guests = [VMGuest(name.strip(), config, context)
-              for name in config.get("derek_setup", "vmguests").split(",")]
-    for guest in guests:
-        guest.create()
-        guest.start()
-
+    vmsetup = VMSetup("derek_setup", config)
+    vmsetup.prepare()
     LOG.debug("Testing...")
     time.sleep(5)
-    for guest in guests:
-        guest.run_target()
-    LOG.debug("Stopping.")
-    for guest in guests:
-        guest.stop()
-        guest.destroy()
+    vmsetup.run()
+    vmsetup.cleanup()
 
 if __name__ == '__main__':
     main()
