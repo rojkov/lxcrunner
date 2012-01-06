@@ -63,6 +63,7 @@ do_start()
 #		--exec $DAEMON -- $DAEMON_ARGS \
 #		|| return 2
 
+    su - derek -c "cd /home/derek/derek && git fetch && git checkout origin/{{branch}} && make compile" || return 2
 	su - riak -c "$DAEMON $DAEMON_ARGS" || return 2
     {% if ip_address != main_riak_node %}
     sleep 3
