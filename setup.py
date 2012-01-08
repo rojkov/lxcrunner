@@ -22,7 +22,7 @@ setup(
     entry_points={
         'console_scripts':
             [
-                'setupenv = virtlib.setupenv:main',
+                'runtests = virtlib.runtests:main',
             ],
     },
     test_suite = "tests"
