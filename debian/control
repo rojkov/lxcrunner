@@ -1,0 +1,11 @@
+Source: virtlib
+Section: python
+Priority: extra
+Maintainer: Dmitry Rozhkov <dmitry.rojkov@gmail.com>
+Build-Depends: debhelper (>= 7.0.50~), python (>= 2.6.6-3~)
+
+Package: python-virtlib
+Section: admin
+Architecture: all
+Description: Helpers to run unit tests inside LXC
+ Helpers to run unit tests inside Linux Containers
