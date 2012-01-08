@@ -1,4 +1,5 @@
 import time
+import sys
 
 import logging, logging.config
 import os.path
@@ -17,12 +18,8 @@ def parse_cmdline():
     parser.add_option("-c", "--config", dest="config",
                       default="/etc/virtlib/config.ini",
                       help="path to config file")
-    parser.add_option("-p", "--path", dest="vm_path",
-                      default="/var/lib/lxc",
-                      help="path to directory with virtual machines")
 
-    (options, args) = parser.parse_args()
-
+    (options, _) = parser.parse_args()
     return options
 
 def main():
@@ -40,6 +37,8 @@ def main():
 
     else:
         logging.basicConfig(level=logging.DEBUG)
+        LOG.error("Config file not found. Exiting...")
+        sys.exit(1)
 
     LOG.debug("Deploy derek setup")
     vmsetup = VMSetup("derek_setup", config)
