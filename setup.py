@@ -25,4 +25,5 @@ setup(
                 'setupenv = virtlib.setupenv:main',
             ],
     },
+    test_suite = "tests"
 )

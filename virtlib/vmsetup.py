@@ -37,8 +37,11 @@ class VMGuest(object):
         self.type = config.get(vmguest_section, "tpl_type")
         tpl_section = "tpl_%s" % self.type
         self.vm_dir = config.get(tpl_section, "vm_dir")
-        tpls = [tpl.strip()
-                for tpl in config.get(tpl_section, "tpls").split(",")]
+        try:
+            tpls = [tpl.strip()
+                    for tpl in config.get(tpl_section, "tpls").split(",")]
+        except NoOptionError:
+            tpls = []
         self.tpls = [(tpl_name, config.get(tpl_section, tpl_name))
                      for tpl_name in tpls]
         self.tarball = config.get(tpl_section, "tarball")
