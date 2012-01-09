@@ -37,6 +37,7 @@ class VMGuest(object):
         self.type = config.get(vmguest_section, "tpl_type")
         tpl_section = "tpl_%s" % self.type
         self.vm_dir = config.get(tpl_section, "vm_dir")
+        self.tpl_dir = config.get(vmguest_section, "tpl_dir")
         try:
             tpls = [tpl.strip()
                     for tpl in config.get(tpl_section, "tpls").split(",")]
@@ -92,7 +93,7 @@ class VMGuest(object):
         vm_tpl.close()
 
         rootfs_path = os.path.join(vm_path, "rootfs")
-        jenv = JinjaEnv(loader=JinjaLoader(os.path.join("templates",
+        jenv = JinjaEnv(loader=JinjaLoader(os.path.join(self.tpl_dir,
                                                         self.type)))
         jenv.globals["split"] = lambda x: x.split(",")
 
