@@ -215,4 +215,3 @@ class VMSetup(object):
         for guest in self.guests:
             guest.stop()
             guest.destroy()
-
