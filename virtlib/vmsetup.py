@@ -93,6 +93,8 @@ class VMGuest(object):
         vm_tpl.close()
 
         rootfs_path = os.path.join(vm_path, "rootfs")
+        self.context["rootfs"] = rootfs_path
+
         jenv = JinjaEnv(loader=JinjaLoader(os.path.join(self.tpl_dir,
                                                         self.type)))
         jenv.globals["split"] = lambda x: x.split(",")
@@ -100,8 +102,7 @@ class VMGuest(object):
         # VM config
         LOG.debug("Render VM config")
         tpl = jenv.get_template("vm_config.tpl")
-        renderfile(tpl, os.path.join(vm_path, "config"),
-                   {"rootfs": rootfs_path})
+        renderfile(tpl, os.path.join(vm_path, "config"), self.context)
 
         for tpl_name, tpl_path in self.tpls:
             LOG.debug("Render %s" % tpl_path)
