@@ -1,3 +1,10 @@
+virtlib (0.0.2) unstable; urgency=low
+
+  * added --no-run option
+  * changed script name: runtests -> virtlib-cli
+
+ -- Mikhail Sobolev <mss@mawhrin.net>  Wed, 18 Jan 2012 14:43:28 +0200
+
 virtlib (0.0.1) unstable; urgency=low
 
   * Initial version
