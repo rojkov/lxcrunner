@@ -1,3 +1,9 @@
+virtlib (0.0.3) unstable; urgency=low
+
+  * fix no-run option
+
+ -- Mikhail Sobolev <mss@mawhrin.net>  Wed, 18 Jan 2012 14:52:33 +0200
+
 virtlib (0.0.2) unstable; urgency=low
 
   * added --no-run option
