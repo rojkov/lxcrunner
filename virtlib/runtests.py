@@ -18,6 +18,9 @@ def parse_cmdline():
     parser.add_option("-c", "--config", dest="config",
                       default="/etc/virtlib/config.ini",
                       help="path to config file")
+    parser.add_option("-d", "--no-run", dest="norun",
+                      default=False,
+                      help="create environment but do not run tests")
 
     (options, _) = parser.parse_args()
     return options
@@ -43,6 +46,10 @@ def main():
     LOG.debug("Deploy derek setup")
     vmsetup = VMSetup("derek_setup", config)
     vmsetup.prepare()
+
+    if options.norun:
+        return
+
     LOG.debug("Testing...")
     time.sleep(5)
     vmsetup.run()
