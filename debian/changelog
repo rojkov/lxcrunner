@@ -1,3 +1,9 @@
+virtlib (0.0.4) unstable; urgency=low
+
+  * change way vm_config is rendered
+
+ -- Mikhail Sobolev <mss@mawhrin.net>  Wed, 18 Jan 2012 15:05:51 +0200
+
 virtlib (0.0.3) unstable; urgency=low
 
   * fix no-run option

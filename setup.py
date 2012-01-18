@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
     name = "virtlib",
-    version = "0.0.3",
+    version = "0.0.4",
     author = "Dmitry Rozhkov",
     author_email = "dmitry.rojkov@gmail.com",
     description = ("Helpers for setting up a virtual test environment."),
