@@ -18,8 +18,8 @@ def parse_cmdline():
     parser.add_option("-c", "--config", dest="config",
                       default="/etc/virtlib/config.ini",
                       help="path to config file")
-    parser.add_option("-d", "--no-run", dest="norun",
-                      default=False,
+    parser.add_option("-d", "--no-run", action="store_true",
+                      dest="norun", default=False,
                       help="create environment but do not run tests")
 
     (options, _) = parser.parse_args()
@@ -31,11 +31,11 @@ def main():
     options = parse_cmdline()
 
     if os.path.exists(options.config):
-        LOG.debug("Reading config file %s" % options.config)
         logging.config.fileConfig(options.config,
                                   disable_existing_loggers=False)
         config = ConfigParser()
         config.read(options.config)
+        LOG.debug("Used config file: %s" % options.config)
         # TODO: update 'options' from 'config' or vice versa
 
     else:
@@ -48,6 +48,7 @@ def main():
     vmsetup.prepare()
 
     if options.norun:
+        LOG.debug("--no-run was specified: exiting...")
         return
 
     LOG.debug("Testing...")
