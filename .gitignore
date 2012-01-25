@@ -1,2 +1,10 @@
 *.swp
 *.pyc
+build/
+debian/files
+debian/python-virtlib.debhelper.log
+debian/python-virtlib.postinst.debhelper
+debian/python-virtlib.prerm.debhelper
+debian/python-virtlib.substvars
+debian/python-virtlib/
+virtlib.egg-info/
