@@ -22,7 +22,7 @@ setup(
     entry_points={
         'console_scripts':
             [
-                'virtlib-cli = virtlib.runtests:main',
+                'virtlib-cli = virtlib.cli:main',
             ],
     },
     test_suite = "tests"
