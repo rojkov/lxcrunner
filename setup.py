@@ -6,18 +6,18 @@ def read(fname):
 
 setup(
     name = "lxcrunner",
-    version = "0.0.4",
+    version = "1.0.0",
     author = "Dmitry Rozhkov",
     author_email = "dmitry.rojkov@gmail.com",
-    description = ("Helpers for setting up a virtual test environment."),
-    license = "GPL",
+    description = ("Helpers to run scripts inside dynamicly created LXC containers."),
+    license = "BSD",
     keywords = "virtualization",
     packages=['lxcrunner'],
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
-        "License :: OSI Approved :: GPL License",
+        "License :: OSI Approved :: BSD License",
     ],
     entry_points={
         'console_scripts':
