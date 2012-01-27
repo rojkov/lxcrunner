@@ -21,6 +21,8 @@ def parse_cmdline():
     parser.add_option("-d", "--no-run", action="store_true",
                       dest="norun", default=False,
                       help="create environment but do not run tests")
+    parser.add_option("-s", "--setup", dest="setup",
+                      help="name of setup in config file")
 
     (options, _) = parser.parse_args()
     return options
@@ -43,8 +45,13 @@ def main():
         LOG.error("Config file not found. Exiting...")
         sys.exit(1)
 
+    if options.setup:
+        setup_name = options.setup
+    else:
+        setup_name = config.get("DEFAULT", "vm_setup")
+
     LOG.debug("Deploy derek setup")
-    vmsetup = VMSetup("derek_setup", config)
+    vmsetup = VMSetup(setup_name, config)
     vmsetup.prepare()
 
     if options.norun:
