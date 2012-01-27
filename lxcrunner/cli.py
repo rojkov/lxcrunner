@@ -7,7 +7,7 @@ import os.path
 from ConfigParser import SafeConfigParser as ConfigParser
 from optparse import OptionParser
 
-from virtlib.vmsetup import VMSetup
+from lxcrunner.vmsetup import VMSetup
 
 LOG = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def parse_cmdline():
 
     parser = OptionParser()
     parser.add_option("-c", "--config", dest="config",
-                      default="/etc/virtlib/config.ini",
+                      default="/etc/lxcrunner/config.ini",
                       help="path to config file")
     parser.add_option("-d", "--no-run", action="store_true",
                       dest="norun", default=False,

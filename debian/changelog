@@ -1,23 +1,23 @@
-virtlib (0.0.4) unstable; urgency=low
+lxcrunner (0.0.4) unstable; urgency=low
 
   * change way vm_config is rendered
 
  -- Mikhail Sobolev <mss@mawhrin.net>  Wed, 18 Jan 2012 15:05:51 +0200
 
-virtlib (0.0.3) unstable; urgency=low
+lxcrunner (0.0.3) unstable; urgency=low
 
   * fix no-run option
 
  -- Mikhail Sobolev <mss@mawhrin.net>  Wed, 18 Jan 2012 14:52:33 +0200
 
-virtlib (0.0.2) unstable; urgency=low
+lxcrunner (0.0.2) unstable; urgency=low
 
   * added --no-run option
   * changed script name: runtests -> virtlib-cli
 
  -- Mikhail Sobolev <mss@mawhrin.net>  Wed, 18 Jan 2012 14:43:28 +0200
 
-virtlib (0.0.1) unstable; urgency=low
+lxcrunner (0.0.1) unstable; urgency=low
 
   * Initial version
 

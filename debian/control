@@ -1,11 +1,15 @@
-Source: virtlib
+Source: lxcrunner
 Section: python
 Priority: extra
 Maintainer: Dmitry Rozhkov <dmitry.rojkov@gmail.com>
 Build-Depends: debhelper (>= 7.0.50~), python (>= 2.6.6-3~)
 
-Package: python-virtlib
+Package: python-lxcrunner
 Section: admin
 Architecture: all
-Description: Helpers to run unit tests inside LXC
- Helpers to run unit tests inside Linux Containers
+Description: Helpers to run scripts inside LXC containers
+ Helpers to run scripts inside LXC Containers. The main purpose
+ of the helpers is
+  - to setup a test environment with one or many Linux containers,
+  - to run unit and functional tests inside the test environment and then
+  - to tear down the containers safely.

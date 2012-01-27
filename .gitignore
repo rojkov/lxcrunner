@@ -2,9 +2,9 @@
 *.pyc
 build/
 debian/files
-debian/python-virtlib.debhelper.log
-debian/python-virtlib.postinst.debhelper
-debian/python-virtlib.prerm.debhelper
-debian/python-virtlib.substvars
-debian/python-virtlib/
-virtlib.egg-info/
+debian/python-lxcrunner.debhelper.log
+debian/python-lxcrunner.postinst.debhelper
+debian/python-lxcrunner.prerm.debhelper
+debian/python-lxcrunner.substvars
+debian/python-lxcrunner/
+lxcrunner.egg-info/

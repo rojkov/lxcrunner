@@ -1,2 +1,2 @@
-config.ini /etc/virtlib/
-examples /usr/share/doc/python-virtlib/
+config.ini /etc/lxcrunner/
+examples /usr/share/doc/python-lxcrunner/

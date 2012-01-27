@@ -5,14 +5,14 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "virtlib",
+    name = "lxcrunner",
     version = "0.0.4",
     author = "Dmitry Rozhkov",
     author_email = "dmitry.rojkov@gmail.com",
     description = ("Helpers for setting up a virtual test environment."),
     license = "GPL",
     keywords = "virtualization",
-    packages=['virtlib'],
+    packages=['lxcrunner'],
     long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -22,7 +22,7 @@ setup(
     entry_points={
         'console_scripts':
             [
-                'virtlib-cli = virtlib.cli:main',
+                'lxcrunner = lxcrunner.cli:main',
             ],
     },
     test_suite = "tests"
