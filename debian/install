@@ -1,3 +1,2 @@
-debian/python-virtlib/usr
-templates /etc/virtlib/
 config.ini /etc/virtlib/
+examples /usr/share/doc/python-virtlib/
