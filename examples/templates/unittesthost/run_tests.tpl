@@ -19,4 +19,4 @@ make compile || exit
 echo "done."
 
 echo "Run tests"
-make test
+make alltests
