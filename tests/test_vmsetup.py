@@ -2,7 +2,7 @@ import unittest
 
 from ConfigParser import ConfigParser, NoOptionError
 
-from lxcrunner.vmsetup import VMGuest
+from lxcrunner.vmguest import VMGuest
 
 class TestVMGuest(unittest.TestCase):
     """Tests for VMGuest."""
