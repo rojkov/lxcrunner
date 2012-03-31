@@ -1,3 +1,14 @@
+lxcrunner (1.1.0) unstable; urgency=low
+
+  * rename VMSetup to VMSuite
+  * move VMSuite to vmsuite.py
+  * move VMGuest to vmguest.py
+  * add option --unique
+  * reimplement stages
+  * check if LXC container exists already before unpacking tarball
+
+ -- Dmitry Rozhkov <dmitry.rojkov@gmail.com>  Sat, 31 Mar 2012 15:48:41 +0000
+
 lxcrunner (1.0.0) unstable; urgency=low
 
   * rename the package to lxcrunner

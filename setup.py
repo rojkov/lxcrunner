@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
     name = "lxcrunner",
-    version = "1.0.0",
+    version = "1.1.0",
     author = "Dmitry Rozhkov",
     author_email = "dmitry.rojkov@gmail.com",
     description = ("Helpers to run scripts inside dynamicly created LXC containers."),
