@@ -7,7 +7,7 @@ import os.path
 from ConfigParser import SafeConfigParser as ConfigParser
 from optparse import OptionParser
 
-from lxcrunner.vmsetup import VMSetup
+from lxcrunner.vmsuite import VMSuite
 
 LOG = logging.getLogger(__name__)
 
@@ -18,11 +18,16 @@ def parse_cmdline():
     parser.add_option("-c", "--config", dest="config",
                       default="/etc/lxcrunner/config.ini",
                       help="path to config file")
-    parser.add_option("-d", "--no-run", action="store_true",
-                      dest="norun", default=False,
-                      help="create environment but do not run tests")
-    parser.add_option("-s", "--setup", dest="setup",
-                      help="name of setup in config file")
+    parser.add_option("-s", "--suite", dest="suite",
+                      help="name of suite in config file")
+    parser.add_option("-e", "--end-stage", dest="endstage",
+                      choices=["prepare", "startsuite", "run", "cleanup"],
+                      help="name of final stage when lxcrunner must stop. "
+                           "The stages are 'prepare', 'startsuite', 'run', "
+                           "'cleanup'")
+    parser.add_option("-u", "--unique", dest="unique",
+                      action="store_true", default=False,
+                      help="add unique suffix to VM guests")
 
     (options, _) = parser.parse_args()
     return options
@@ -45,23 +50,34 @@ def main():
         LOG.error("Config file not found. Exiting...")
         sys.exit(1)
 
-    if options.setup:
-        setup_name = options.setup
+    if options.suite:
+        suite_name = options.suite
     else:
-        setup_name = config.get("DEFAULT", "vm_setup")
+        suite_name = config.get("DEFAULT", "vm_suite")
 
-    LOG.debug("Deploy derek setup")
-    vmsetup = VMSetup(setup_name, config)
-    vmsetup.prepare()
+    LOG.debug("Deploy suite '%s'", suite_name)
+    vmsuite = VMSuite(suite_name, config, options.unique)
+    vmsuite.prepare()
 
-    if options.norun:
-        LOG.debug("--no-run was specified: exiting...")
+    if options.endstage == "prepare":
+        LOG.info("'prepare' is the final stage: exiting...")
         return
 
-    LOG.debug("Testing...")
+    LOG.debug("Start suite...")
+    vmsuite.start_suite()
     time.sleep(5)
-    vmsetup.run()
-    vmsetup.cleanup()
+
+    if options.endstage == "startsuite":
+        LOG.info("'startsuite' is the final stage: exiting...")
+        return
+
+    try:
+        vmsuite.run()
+    finally:
+        if options.endstage == "run":
+            LOG.info("'run' is the final stage: don't clean up")
+            return
+        vmsuite.cleanup()
 
 if __name__ == '__main__':
     main()

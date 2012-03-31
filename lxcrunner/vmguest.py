@@ -24,7 +24,11 @@ class VMGuest(object):
         ST_RUNNING: (ST_STOPPED)
     }
 
-    def __init__(self, name, config, context = None):
+    def __str__(self):
+        """Return string representation."""
+        return self.container
+
+    def __init__(self, name, config, context = None, suffix = ""):
         """Constructor."""
 
         if context is None:
@@ -33,6 +37,10 @@ class VMGuest(object):
             context = context.copy()
 
         self.name = name
+        if suffix:
+            self.container = "%s-%s" % (name, suffix)
+        else:
+            self.container = name
         vmguest_section = "vmguest_%s" % name
         self.type = config.get(vmguest_section, "tpl_type")
         tpl_section = "tpl_%s" % self.type
@@ -47,20 +55,11 @@ class VMGuest(object):
                      for tpl_name in tpls]
         self.tarball = config.get(tpl_section, "tarball")
 
-        # target command
-        def get_opt(optname):
-            trg_defaults = {
-                "target_user": "nobody",
-                "target_cmd": None
-            }
-            try:
-                return config.get(vmguest_section, optname)
-            except NoOptionError:
-                return trg_defaults[optname]
-        self.target = {
-            "cmd": get_opt("target_cmd"),
-            "user": get_opt("target_user")
-        }
+        try:
+            self.execute_cmd = config.get(vmguest_section, "execute")
+        except NoOptionError:
+            self.execute_cmd = None
+        self.is_executable = self.execute_cmd is not None
 
         # context
         context.update(
@@ -83,7 +82,7 @@ class VMGuest(object):
 
         self._check_transition(self.ST_STOPPED)
 
-        vm_path = os.path.join(self.vm_dir, self.name)
+        vm_path = os.path.join(self.vm_dir, self.container)
         LOG.debug("Create VM folder '%s'" % vm_path)
         os.mkdir(vm_path, 0755)
 
@@ -104,67 +103,83 @@ class VMGuest(object):
         tpl = jenv.get_template("vm_config.tpl")
         renderfile(tpl, os.path.join(vm_path, "config"), self.context)
 
-        for tpl_name, tpl_path in self.tpls:
-            LOG.debug("Render %s" % tpl_path)
+        for tpl_name, tpl_info in self.tpls:
+            # "path/to/tpl 744" => {'path': 'path/to/tpl', 'chmod': 744}
+            tinfo = dict(zip(["path", "chmod"], tpl_info.split()))
+            LOG.debug("Render %s" % tinfo['path'])
             tpl = jenv.get_template("%s.tpl" % tpl_name)
-            renderfile(tpl, os.path.join(rootfs_path, tpl_path), self.context)
+            path = os.path.join(rootfs_path, tinfo['path'])
+            renderfile(tpl, path, self.context)
+            if 'chmod' in tinfo:
+                LOG.debug("chmod %s to %s" % (path, tinfo['chmod']))
+                os.chmod(path, int(tinfo['chmod'], 8))
         LOG.debug("Used context %r" % self.context)
         self.state = self.ST_STOPPED
 
     def start(self):
         """Start VM guest."""
 
-        LOG.debug("Starting '%s'" % self.name)
+        assert not self.is_executable
+
+        LOG.debug("Starting '%s'" % self.container)
         self._check_transition(self.ST_RUNNING)
         try:
-            subprocess.check_call(["/usr/bin/lxc-start", "-n", self.name, "-d",
-                                   "-o", "/var/log/lxc.%s.log" % self.name,
+            subprocess.check_call(["/usr/bin/lxc-start", "-n", self.container,
+                                   "-d",
+                                   "-o", "/var/log/lxc.%s.log" % self.container,
                                    "-l", "DEBUG"],
                                   close_fds=True)
-            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name,
-                                   "-o", "/var/log/lxc.%s.log" % self.name,
+            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.container,
+                                   "-o", "/var/log/lxc.%s.log" % self.container,
                                    "-l", "DEBUG", "-s", "RUNNING"],
                                   close_fds=True)
         except subprocess.CalledProcessError, err:
-            raise VMError("Can't start %s" % self.name)
+            raise VMError("Can't start %s" % self.container)
         self.state = self.ST_RUNNING
+
+    def execute(self):
+        """Execute a command inside VM guest."""
+
+        assert self.is_executable
+
+        LOG.debug("Executing command '%s' in '%s'" % (self.execute_cmd,
+                                                      self.container))
+        self._check_transition(self.ST_RUNNING)
+        try:
+            cmd = ["/usr/bin/lxc-start", "-n", self.container, "-o",
+                   "/var/log/lxc.%s.log" % self.container, "-l", "DEBUG"]
+            cmd.extend(self.execute_cmd.split())
+            subprocess.check_call(cmd, close_fds=True)
+        except subprocess.CalledProcessError, err:
+            msg = "Can't start %s: %s" % (self.container, err)
+            LOG.error(msg)
+            raise VMError(msg)
 
     def stop(self):
         """Stop VM guest."""
 
-        LOG.debug("Stopping '%s'" % self.name)
+        LOG.debug("Stopping '%s'" % self.container)
         self._check_transition(self.ST_STOPPED)
         try:
-            subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.name,
-                                   "-o", "/var/log/lxc.%s.log" % self.name,
+            subprocess.check_call(["/usr/bin/lxc-stop", "-n", self.container,
+                                   "-o", "/var/log/lxc.%s.log" % self.container,
                                    "-l", "DEBUG"],
                                   close_fds=True)
-            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.name,
-                                   "-o", "/var/log/lxc.%s.log" % self.name,
+            subprocess.check_call(["/usr/bin/lxc-wait", "-n", self.container,
+                                   "-o", "/var/log/lxc.%s.log" % self.container,
                                    "-l", "DEBUG", "-s", "STOPPED"],
                                   close_fds=True)
         except subprocess.CalledProcessError, err:
-            raise VMError("Can't stop %s" % self.name)
+            raise VMError("Can't stop %s" % self.container)
         self.state = self.ST_STOPPED
 
     def destroy(self):
         """Destroy VM guest."""
 
-        LOG.debug("Destroying '%s'" % self.name)
+        LOG.debug("Destroying '%s'" % self.container)
         self._check_transition(self.ST_INCOMPLETE)
-        subprocess.check_call(["/usr/bin/lxc-destroy", "-n", self.name])
+        subprocess.check_call(["/usr/bin/lxc-destroy", "-n", self.container])
         self.state = self.ST_INCOMPLETE
-
-    def run_target(self):
-        """Run target command."""
-
-        if not self.target["cmd"]:
-            LOG.debug("No target command defined for %s" % self.name)
-            return
-        trgcmd = ["su", "-", self.target["user"], "-c"]
-        trgcmd.append(self.target["cmd"])
-        LOG.debug("Target command: %r" % trgcmd)
-        subprocess.call(trgcmd)
 
     def _check_preconditions(self):
         """Verify the environment is ready."""
@@ -182,37 +197,3 @@ class VMGuest(object):
         if new_state not in self._TRANSITIONS[self.state]:
             raise VMError("Transition '%s -> %s' is impossible" % \
                           (self.state, new_state))
-
-class VMSetup(object):
-    """Setup of VM guest collection."""
-
-    def __init__(self, name, config):
-        """Constructor."""
-
-        self.name = name
-        context = dict([(n[4:], v) for (n, v) in config.items(name)
-                                   if n.startswith("ctx_")])
-        self.guests = [VMGuest(n.strip(), config, context)
-                       for n in config.get(name, "vmguests").split(",")]
-
-    def prepare(self):
-        """Prepare virtual environment."""
-
-        LOG.debug("Prepare environment for '%s'" % self.name)
-        for guest in self.guests:
-            guest.create()
-            guest.start()
-
-    def run(self):
-        """Run target commands inside guests."""
-
-        LOG.debug("Run targets")
-        for guest in self.guests:
-            guest.run_target()
-
-    def cleanup(self):
-        """Clean up."""
-        LOG.debug("Do cleanup.")
-        for guest in self.guests:
-            guest.stop()
-            guest.destroy()
